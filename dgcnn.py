@@ -26,21 +26,15 @@ lblmap = {
 }
 
 print('reading data')
-
 for fname in tqdm(os.listdir('data')):
 	df = pd.read_csv('data/'+fname)
 	roi_names = df.columns
 	time_series = ts.TimeSeries(df.to_numpy().T, sampling_interval=2)
-
 	f_ub = 0.2
 	f_lb = 0.1
-
 	C = nta.CoherenceAnalyzer(time_series)
-
 	freq_idx_C = np.where((C.frequencies > f_lb) * (C.frequencies < f_ub))[0]
-
 	coh = np.mean(C.coherence[:, :, freq_idx_C], -1)
-
 	source, target, weight = [], [], []
 	for row in range(48):
 		for col in range(row+1):
@@ -48,12 +42,12 @@ for fname in tqdm(os.listdir('data')):
 				source.append(df.columns[row])
 				target.append(df.columns[col])
 				weight.append(coh[row][col])
-
 	nodes = pd.DataFrame(
-		{'default': [i for i in range(48)]},
+		{
+			'default': [i for i in range(48)]
+		},
 		index=df.columns
 	)
-
 	edges = pd.DataFrame(
 		{
 			'source': source,
@@ -61,27 +55,20 @@ for fname in tqdm(os.listdir('data')):
 			'weight': weight
 		}
 	)
-
 	graph = StellarGraph(nodes, edges)
-
 	graphs.append(graph)
-
 	graph_labels.append(lblmap[fname[4]])
-
 
 graph_labels = pd.get_dummies(graph_labels)
 
 generator = PaddedGraphGenerator(graphs)
-
-
-k = 4
 
 layer_sizes = [32, 32, 32, 4]
 
 dgcnn_model = DeepGraphCNN(
 	layer_sizes=layer_sizes,
 	activations=['tanh', 'tanh', 'tanh', 'tanh'],
-	k=k,
+	k=4,
 	bias=False,
 	generator=generator,
 )

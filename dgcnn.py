@@ -25,7 +25,7 @@ lblmap = {
 	'7': 'adhd'
 }
 
-print('reading data')
+print('reading data...')
 for fname in tqdm(os.listdir('data')):
 	df = pd.read_csv('data/'+fname)
 	roi_names = df.columns
@@ -43,11 +43,9 @@ for fname in tqdm(os.listdir('data')):
 				target.append(df.columns[col])
 				weight.append(coh[row][col])
 	nodes = pd.DataFrame(
-		{
-			'default': [i for i in range(48)]
-		},
-		index=df.columns
-	)
+    	[df[df.columns[i]] for i in range(48)],
+    	index=df.columns
+    )
 	edges = pd.DataFrame(
 		{
 			'source': source,
@@ -63,12 +61,12 @@ graph_labels = pd.get_dummies(graph_labels)
 
 generator = PaddedGraphGenerator(graphs)
 
-layer_sizes = [32, 32, 32, 4]
+layer_sizes = [16, 16, 16, 4]
 
 dgcnn_model = DeepGraphCNN(
 	layer_sizes=layer_sizes,
 	activations=['tanh', 'tanh', 'tanh', 'tanh'],
-	k=4,
+	k=16,
 	bias=False,
 	generator=generator,
 )
@@ -79,7 +77,6 @@ x_out = MaxPool1D(pool_size=2)(x_out)
 x_out = Conv1D(filters=32, kernel_size=5, strides=1)(x_out)
 x_out = Flatten()(x_out)
 x_out = Dense(units=128, activation='relu')(x_out)
-x_out = Dropout(rate=0.5)(x_out)
 predictions = Dense(units=4, activation='softmax')(x_out)
 
 model = Model(inputs=x_in, outputs=predictions)
@@ -109,5 +106,5 @@ test_gen = gen.flow(
 )
 
 history = model.fit(
-	train_gen, epochs=100, verbose=1, validation_data=test_gen, shuffle=True,
+	train_gen, epochs=10, verbose=1, validation_data=test_gen, shuffle=True,
 )

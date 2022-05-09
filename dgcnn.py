@@ -43,9 +43,9 @@ for fname in tqdm(os.listdir('data')):
 				target.append(df.columns[col])
 				weight.append(coh[row][col])
 	nodes = pd.DataFrame(
-    	[df[df.columns[i]] for i in range(48)],
-    	index=df.columns
-    )
+		[df[df.columns[i]] for i in range(48)],
+		index=df.columns
+	)
 	edges = pd.DataFrame(
 		{
 			'source': source,
